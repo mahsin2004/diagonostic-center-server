@@ -29,7 +29,6 @@ const verifyToken = (req, res, next) => {
       return res.status(401).send({ message: "unauthorized access" });
     }
     req.user = decoded;
-    console.log(decoded)
     next();
   });
 };
@@ -55,6 +54,7 @@ async function run() {
     await client.connect();
 
     const userCollection = client.db("medicalDB").collection("users");
+    const bannerCollection = client.db("medicalDB").collection("banners");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.user.email;
@@ -67,7 +67,7 @@ async function run() {
       next();
     };
    
-    //Routes
+    //Get Routes
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       console.log(req.user.email)
@@ -87,13 +87,29 @@ async function run() {
         res.send({ admin });
     });
 
+     app.get("/users", async(req, res)=>{
+        const result = await userCollection.find().toArray();
+        res.send(result)
+     })
+     
+     app.get("/banners", async(req, res) => {
+      const result = await bannerCollection.find().toArray();
+        res.send(result)
+    });
+
+
+    // Post Users
     app.post("/users", async(req, res) => {
       const user = req.body;
-      console.log(user);
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
+    app.post("/banners", async(req, res) => {
+      const user = req.body;
+      const result = await bannerCollection.insertOne(user);
+      res.send(result);
+    });
 
     // Create Json Web Token
     app.post("/jwt", async (req, res) => {
