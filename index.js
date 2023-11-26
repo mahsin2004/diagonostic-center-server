@@ -144,7 +144,13 @@ async function run() {
     // Update Route
     app.patch("/banners/admin/:id",verifyToken, async (req, res) => {
         const id = req.params.id;
-        console.log(id)
+  
+        
+        await bannerCollection.updateMany(
+          { _id: { $ne: new ObjectId(id) } },
+          { $set: { isActive: false } }
+        );
+
         const filter = { _id: new ObjectId(id) };
         const updateDoc = {
           $set: {
