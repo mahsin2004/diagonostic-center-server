@@ -57,6 +57,7 @@ async function run() {
 
     const userCollection = client.db("medicalDB").collection("users");
     const bannerCollection = client.db("medicalDB").collection("banners");
+    const tipsCollection = client.db("medicalDB").collection("tips");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.user.email;
@@ -99,7 +100,10 @@ async function run() {
         res.send(result)
     });
 
-    
+    app.get("/tips", async(req, res) => {
+      const result = await tipsCollection.find().toArray();
+        res.send(result)
+    })
 
 
     // Post Users
