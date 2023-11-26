@@ -7,18 +7,19 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleWare
-app.use(cors({
-  origin: [
-  //  "https://b8a12-server-client.web.app",
-  //  "https://b8a12-server-side.vercel.app"
-    "http://localhost:5173",
-    "http://localhost:5000"
-  ],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: [
+      //  "https://b8a12-server-client.web.app",
+      //  "https://b8a12-server-side.vercel.app"
+      "http://localhost:5173",
+      "http://localhost:5000",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
-
 
 // Custom middleware
 const verifyToken = (req, res, next) => {
@@ -35,8 +36,7 @@ const verifyToken = (req, res, next) => {
   });
 };
 
- // Verify Admin Custom Middleware
-
+// Verify Admin Custom Middleware
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASSWORD}@cluster0.mowydsq.mongodb.net/?retryWrites=true&w=majority`;
@@ -70,7 +70,6 @@ async function run() {
       next();
     };
 
-   
     //Get Routes
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -80,40 +79,64 @@ async function run() {
 
       const query = { email: email };
 
-        const user = await userCollection.findOne(query);
-        let admin = false;
+      const user = await userCollection.findOne(query);
+      let admin = false;
 
-        if (user) {
-          admin = user.role === "Admin";
-        }
+      if (user) {
+        admin = user.role === "Admin";
+      }
 
-        res.send({ admin });
+      res.send({ admin });
     });
 
-     app.get("/users", async(req, res)=>{
-        const result = await userCollection.find().toArray();
-        res.send(result)
-     })
-     
-     app.get("/banners", async(req, res) => {
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.put("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateJob = {
+        $set: {
+          displayName: user.displayName,
+          email: user.email,
+          bloodGroup: user.bloodGroup,
+          district: user.district,
+          upazila: user.upazila,
+        },
+      };
+      const result = await userCollection.updateOne(query, updateJob, options);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/banners", async (req, res) => {
       const result = await bannerCollection.find().toArray();
-        res.send(result)
+      res.send(result);
     });
 
-    app.get("/tips", async(req, res) => {
+    app.get("/tips", async (req, res) => {
       const result = await tipsCollection.find().toArray();
-        res.send(result)
-    })
-
+      res.send(result);
+    });
 
     // Post Users
-    app.post("/users", async(req, res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
-    app.post("/banners", async(req, res) => {
+    app.post("/banners", async (req, res) => {
       const user = req.body;
       const result = await bannerCollection.insertOne(user);
       res.send(result);
@@ -137,31 +160,30 @@ async function run() {
     // Clear Json Web Token
     app.post("/logOut", async (req, res) => {
       const user = req.body;
-      console.log('log out user', user)
-      res.clearCookie("token", {maxAge: 0, sameSite: 'none', secure: true}).send({ success: true });
+      console.log("log out user", user);
+      res
+        .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
+        .send({ success: true });
     });
 
     // Update Route
-    app.patch("/banners/admin/:id",verifyToken, async (req, res) => {
-        const id = req.params.id;
-  
-        
-        await bannerCollection.updateMany(
-          { _id: { $ne: new ObjectId(id) } },
-          { $set: { isActive: false } }
-        );
+    app.patch("/banners/admin/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
 
-        const filter = { _id: new ObjectId(id) };
-        const updateDoc = {
-          $set: {
-            isActive: true,
-          },
-        };
-        const result = await bannerCollection.updateOne(filter, updateDoc);
-        res.send(result);
-      }
-    );
+      await bannerCollection.updateMany(
+        { _id: { $ne: new ObjectId(id) } },
+        { $set: { isActive: false } }
+      );
 
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          isActive: true,
+        },
+      };
+      const result = await bannerCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // Delete Route
     app.delete("/banners/:id", verifyToken, async (req, res) => {
@@ -170,12 +192,6 @@ async function run() {
       const result = await bannerCollection.deleteOne(query);
       res.send(result);
     });
-
-
-
-
-
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
