@@ -70,7 +70,7 @@ async function run() {
       next();
     };
 
-    //Get Routes
+    //Get Routes seeing user is admin or not
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.user.email) {
@@ -135,6 +135,36 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
+
+    // user status update
+    app.patch("/users/status/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const existingUser = await userCollection.findOne(filter);
+      const newStatus = existingUser.status === "active" ? "blocked" : "active";
+      const updateDoc = {
+        $set: {
+          status: newStatus,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // set as role
+    app.patch("/users/role/:id", verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: "Admin",
+          },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
 
     app.post("/banners", async (req, res) => {
       const user = req.body;
