@@ -58,6 +58,8 @@ async function run() {
     const userCollection = client.db("medicalDB").collection("users");
     const bannerCollection = client.db("medicalDB").collection("banners");
     const tipsCollection = client.db("medicalDB").collection("tips");
+    const testCollection = client.db("medicalDB").collection("tests");
+    const bookingCollection = client.db("medicalDB").collection("bookings");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.user.email;
@@ -124,8 +126,35 @@ async function run() {
       res.send(result);
     });
 
+    // all tests loading route
+    app.get("/tests", async (req, res) => {
+      const result = await testCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/tests/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await testCollection.findOne(query);
+      res.send(result);
+    });
+
+    //get Booked by email
+    app.get("/bookings", async (req, res) => {
+      const result = await bookingCollection.find().toArray;
+      res.send(result);
+    });
+
+
     app.get("/tips", async (req, res) => {
       const result = await tipsCollection.find().toArray();
+      res.send(result);
+    });
+
+    //Post Booking
+    app.post("/bookings", async (req, res) => {
+      const info = req.body;
+      const result = await bookingCollection.insertOne(info);
       res.send(result);
     });
 
@@ -152,19 +181,39 @@ async function run() {
     });
 
     // set as role
-    app.patch("/users/role/:id", verifyToken,
-      async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const updateDoc = {
-          $set: {
-            role: "Admin",
-          },
-        };
-        const result = await userCollection.updateOne(filter, updateDoc);
-        res.send(result);
-      }
-    );
+    app.patch("/users/role/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "Admin",
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    //slots value reduces
+    app.patch('/tests/reduce/:id', async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+    
+      const fieldToReduce = 'slots'; 
+      const reduceValue = 1; 
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+    
+      const updateJob = {
+        $inc: {
+          [fieldToReduce]: -reduceValue, 
+        },
+      };
+    
+   
+        const result = await testCollection.updateOne(query, updateJob, options);
+        res.json(result);
+      
+    });
 
     app.post("/banners", async (req, res) => {
       const user = req.body;
