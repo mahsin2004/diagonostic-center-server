@@ -139,6 +139,14 @@ async function run() {
       res.send(result);
     });
 
+    //Add a Test 
+    app.post("/tests", async (req, res) => {
+      const info = req.body;
+      const result = await testCollection.insertOne(info);
+      res.send(result);
+    });
+
+
     //get Booked by email
     app.get("/bookings", async (req, res) => {
       const result = await bookingCollection.find().toArray;
@@ -193,8 +201,37 @@ async function run() {
       res.send(result);
     });
 
+    //test Update
+    app.put('/tests/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateJob = {
+        $set: {
+          title: user.title, 
+          image: user.image, 
+          availableDates: user.availableDates, 
+          shortDescription: user.shortDescription, 
+          price: user.price, 
+          time: user.time,
+          slots: user.slots
+        },
+      };
+        const result = await testCollection.updateOne(query, updateJob, options);
+        res.json(result);
+      
+    });
+
+    app.put('/tests/delete/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await testCollection.deleteOne(query);
+      res.json(result);
+    });
+
     //slots value reduces
-    app.patch('/tests/reduce/:id', async (req, res) => {
+    app.put('/tests/reduce/:id', async (req, res) => {
       const id = req.params.id;
       const user = req.body;
     
