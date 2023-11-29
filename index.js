@@ -10,12 +10,12 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
-      //  "https://b8a12-server-client.web.app",
-      //  "https://b8a12-server-side.vercel.app"
-      "http://localhost:5173",
-      "http://localhost:5000",
+       "https://b8a12-server-client.web.app",
+       "https://b8a12-server-side.vercel.app"
+      // "http://localhost:5173",
+      // "http://localhost:5000",
     ],
-    credentials: true,
+    // credentials: true,
   })
 );
 app.use(express.json());
@@ -53,7 +53,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const userCollection = client.db("medicalDB").collection("users");
     const bannerCollection = client.db("medicalDB").collection("banners");
@@ -73,11 +73,11 @@ async function run() {
     };
 
     //Get Routes seeing user is admin or not
-    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+    app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
-      if (email !== req.user.email) {
-        return res.status(403).send({ message: "Forbidden Access" });
-      }
+      // if (email !== req.user.email) {
+      //   return res.status(403).send({ message: "Forbidden Access" });
+      // }
 
       const query = { email: email };
 
@@ -203,7 +203,7 @@ async function run() {
     });
 
     // user status update
-    app.patch("/users/status/:id", verifyToken, async (req, res) => {
+    app.patch("/users/status/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const existingUser = await userCollection.findOne(filter);
@@ -218,7 +218,7 @@ async function run() {
     });
 
     // set as role
-    app.patch("/users/role/:id", verifyToken, async (req, res) => {
+    app.patch("/users/role/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -312,7 +312,7 @@ async function run() {
     });
 
     // Update Route
-    app.patch("/banners/admin/:id", verifyToken, async (req, res) => {
+    app.patch("/banners/admin/:id", async (req, res) => {
       const id = req.params.id;
 
       await bannerCollection.updateMany(
@@ -331,7 +331,7 @@ async function run() {
     });
 
     // Delete Route
-    app.delete("/banners/:id", verifyToken, async (req, res) => {
+    app.delete("/banners/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bannerCollection.deleteOne(query);
@@ -339,10 +339,10 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
