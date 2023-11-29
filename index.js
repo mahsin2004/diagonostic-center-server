@@ -166,6 +166,22 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/bookings/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateJob = {
+        $set: { 
+            report: user.report,
+            reportLink: user.reportLink, 
+        },
+      };
+        const result = await bookingCollection.updateOne(query, updateJob, options);
+        res.json(result);
+      
+    });
+
 
     app.get("/tips", async (req, res) => {
       const result = await tipsCollection.find().toArray();
